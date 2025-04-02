@@ -20,7 +20,7 @@ public class EmprestimoServiceTest()
     [InlineData(null)]
     public void SimularEmprestimo_DeveLancarArgumentNullException_QuandoNomeForInvalido(string nome)
     {
-        const string mensagemEsperada = "Nome deve ser informado.";
+        const string mensagemEsperada = "O nome deve ser informado.";
 
         var exception = Assert.Throws<ArgumentNullException>(() => EmprestimoService.SimularEmprestimo(nome));
 
