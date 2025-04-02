@@ -27,22 +27,27 @@ jobs:
         run: dotnet test --no-build --collect:"XPlat Code Coverage"
         working-directory: SimuladorAppTests
       
-      - name: 📊 Instalar ReportGenerator
+      - name: Install ReportGenerator
         run: dotnet tool install --global dotnet-reportgenerator-globaltool
       
-      - name: 🎨 Gerar relatório HTML
+      - name: Generate HTML report
         run: |
           reportgenerator -reports:**/TestResults/*/coverage.cobertura.xml -targetdir:coveragereport -reporttypes:Html
       
-      - name: 📊 Extrair cobertura e publicar no Summary
+      - name: get coverage and publish on summary
         run: |
-          TOTAL_COVERAGE=$(grep -oP '(?<=line-rate=")[0-9.]*' coveragereport/Cobertura.xml | awk '{s+=$1} END {print s*100}')
+          COVERAGE_FILE=$(find SimuladorAppTests/TestResults -name "coverage.cobertura.xml" | head -n 1)
+          if [[ -z "$COVERAGE_FILE" ]]; then
+            echo "❌ Arquivo de cobertura não encontrado!" >> $GITHUB_STEP_SUMMARY
+            exit 1
+          fi
+          TOTAL_COVERAGE=$(grep -oP '(?<=line-rate=")[0-9.]+' "$COVERAGE_FILE" | awk '{s+=$1} END {print s*100}')
           echo '### 📊 Relatório de Cobertura de Código' >> $GITHUB_STEP_SUMMARY
           echo "**Cobertura Total:** $TOTAL_COVERAGE%" >> $GITHUB_STEP_SUMMARY
           echo "- ✅ Meta: 80%" >> $GITHUB_STEP_SUMMARY
           if (( $(echo "$TOTAL_COVERAGE < 80" | bc -l) )); then
             echo "⚠️ A cobertura está abaixo da meta!" >> $GITHUB_STEP_SUMMARY
-            exit 1  # Falha o pipeline se a cobertura for insuficiente
+            exit 1
           fi
  
       - name: Upload report
