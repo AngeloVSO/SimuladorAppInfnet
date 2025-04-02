@@ -1,5 +1,8 @@
-﻿namespace SimuladorApp;
+﻿using System.Diagnostics.CodeAnalysis;
 
+namespace SimuladorApp;
+
+[ExcludeFromCodeCoverage]
 class Program
 {
     static void Main()
@@ -10,7 +13,6 @@ class Program
 
         try
         {
-            var servico = new EmprestimoService();
             var resultado = EmprestimoService.SimularEmprestimo(nome);
 
             Console.WriteLine("\n=== Resultado da Simulação ===");
