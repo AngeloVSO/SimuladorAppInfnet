@@ -42,7 +42,7 @@ jobs:
           password: ${{ secrets.DOCKER_PASSWORD }}
 
       - name: Build docker image
-        run: cd ./SimuladorApp && docker build -t ${{ secrets.DOCKER_USERNAME }}/simuladorapp:latest -f SimuladorApp/Dockerfile .
+        run: docker build -t ${{ secrets.DOCKER_USERNAME }}/simuladorapp:latest .
 
       - name: Push docker image to hub
-        run: cd ./SimuladorApp && docker push ${{ secrets.DOCKER_USERNAME }}/simuladorapp:latest
+        run: docker push ${{ secrets.DOCKER_USERNAME }}/simuladorapp:latest
