@@ -25,7 +25,7 @@ jobs:
 
       - name: Test covarage
         run: |
-          dotnet test --no-build --collect:"XPlat Code Coverage" --settings coverlet.runsettings
+          dotnet test --no-build --collect:"XPlat Code Coverage"
         working-directory: SimuladorAppTests
 
       - name: Install ReportGenerator
