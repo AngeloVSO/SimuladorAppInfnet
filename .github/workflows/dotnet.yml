@@ -23,17 +23,23 @@ jobs:
       - name: Build
         run: dotnet build --no-restore
 
-      - name: Test covarage
-        run: |
-         dotnet test --no-build --collect:"XPlat Code Coverage"
-         working-directory: SimuladorAppTests
- 
-      - name: Install ReportGenerator
+      - name: 🚀 Rodar testes com cobertura
+        run: dotnet test --no-build --collect:"XPlat Code Coverage"
+        working-directory: SimuladorAppTests
+      
+      - name: 📊 Instalar ReportGenerator
         run: dotnet tool install --global dotnet-reportgenerator-globaltool
- 
-      - name: Generate HTML report
+      
+      - name: 🎨 Gerar relatório HTML
         run: |
           reportgenerator -reports:**/TestResults/*/coverage.cobertura.xml -targetdir:coveragereport -reporttypes:Html
+      
+      - name: 📤 Publicar relatório no Summary do GitHub Actions
+        run: |
+          echo '### 📊 Relatório de Cobertura de Código' >> $GITHUB_STEP_SUMMARY
+          echo '<details><summary>Clique para expandir</summary>' >> $GITHUB_STEP_SUMMARY
+          echo '<img src="coveragereport/index.html" width="100%"/>' >> $GITHUB_STEP_SUMMARY
+          echo '</details>' >> $GITHUB_STEP_SUMMARY
  
       - name: Upload report
         uses: actions/upload-artifact@v4
