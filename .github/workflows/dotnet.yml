@@ -41,6 +41,8 @@ jobs:
           path: coveragereport
 
       - name: Coverage and publish on summary
+        env:
+          COVERAGE_META: ${{ secrets.COVERAGE_PERCENT }}
         run: |
           COVERAGE_FILE=$(find SimuladorAppTests/TestResults -name "coverage.cobertura.xml" | head -n 1)
           if [[ -z "$COVERAGE_FILE" ]]; then
@@ -49,10 +51,7 @@ jobs:
           fi
 
           TOTAL_COVERAGE=$(grep -oP '(?<=line-rate=")[0-9.]+' "$COVERAGE_FILE" | head -n 1)
-
           TOTAL_COVERAGE_PERCENT=$(echo "$TOTAL_COVERAGE * 100" | bc)
-
-          export COVERAGE_META=${{ secrets.COVERAGE_PERCENT }}
 
           echo '### 📊 Relatório de Cobertura de Código' >> $GITHUB_STEP_SUMMARY
           echo "**Cobertura Total:** $TOTAL_COVERAGE_PERCENT% - Meta: $COVERAGE_META%" >> $GITHUB_STEP_SUMMARY
