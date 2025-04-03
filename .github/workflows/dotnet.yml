@@ -81,15 +81,25 @@ jobs:
       - name: Push docker image to hub
         run: docker push ${{ secrets.DOCKER_USERNAME }}/simuladorapp:latest
 
-      # deploy:
-      #   needs: docker
-      #   runs-on: self-hosted
-      #   steps:
-      #     - name: Pull image from docker hub
-      #       run: sudo docker pull ${{ secrets.DOCKER_USERNAME }}/simuladorapp:latest
+      - name: Check and Start EC2 Instance
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
 
-      #     - name: Run docker container
-      #       run: sudo docker run -d ${{ secrets.DOCKER_USERNAME }}/simuladorapp:latest
+      - name: Start EC2 if stopped
+        run: |
+          INSTANCE_STATE=$(aws ec2 describe-instances --instance-ids ${{ secrets.EC2_INSTANCE_ID }} --query 'Reservations[*].Instances[*].State.Name' --output text)
+          if [ "$INSTANCE_STATE" != "running" ]; then
+            echo "Starting EC2 instance..."
+            aws ec2 start-instances --instance-ids ${{ secrets.EC2_INSTANCE_ID }}
+            echo "Waiting for instance to be in running state..."
+            aws ec2 wait instance-running --instance-ids ${{ secrets.EC2_INSTANCE_ID }}
+            echo "EC2 instance is now running."
+          else
+            echo "EC2 instance is already running."
+          fi
 
       - name: Deploy to server
         uses: appleboy/ssh-action@master
