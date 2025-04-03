@@ -40,11 +40,11 @@ jobs:
           name: CodeCoverageReport
           path: coveragereport
 
-      - name: get coverage and publish on summary
+      - name: Coverage and publish on summary
         run: |
           COVERAGE_FILE=$(find SimuladorAppTests/TestResults -name "coverage.cobertura.xml" | head -n 1)
           if [[ -z "$COVERAGE_FILE" ]]; then
-            echo "❌ Arquivo de cobertura não encontrado!" >> $GITHUB_STEP_SUMMARY
+            echo "Arquivo de cobertura não encontrado!" >> $GITHUB_STEP_SUMMARY
             exit 1
           fi
 
@@ -61,7 +61,7 @@ jobs:
           fi
 
   docker:
-    name: Create and push docker image
+    name: Publish docker and deploy
     needs: build
     runs-on: ubuntu-latest
 
