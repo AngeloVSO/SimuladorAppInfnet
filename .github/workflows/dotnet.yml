@@ -6,6 +6,7 @@ on:
 
 jobs:
   build:
+    environment: production
     runs-on: ubuntu-latest
 
     steps:
@@ -41,8 +42,6 @@ jobs:
           path: coveragereport
 
       - name: Coverage and publish on summary
-        env:
-          COVERAGE_META: ${{ secrets.COVERAGE_PERCENT }}
         run: |
           COVERAGE_FILE=$(find SimuladorAppTests/TestResults -name "coverage.cobertura.xml" | head -n 1)
           if [[ -z "$COVERAGE_FILE" ]]; then
@@ -54,9 +53,9 @@ jobs:
           TOTAL_COVERAGE_PERCENT=$(echo "$TOTAL_COVERAGE * 100" | bc)
 
           echo '### 📊 Relatório de Cobertura de Código' >> $GITHUB_STEP_SUMMARY
-          echo "**Cobertura Total:** $TOTAL_COVERAGE_PERCENT% - Meta: $COVERAGE_META%" >> $GITHUB_STEP_SUMMARY
+          echo "**Cobertura Total:** $TOTAL_COVERAGE_PERCENT% - Meta: ${{ vars.MEU_VALOR }}%" >> $GITHUB_STEP_SUMMARY
 
-          if (( $(echo "$TOTAL_COVERAGE_PERCENT < $COVERAGE_META" | bc -l) )); then
+          if (( $(echo "$TOTAL_COVERAGE_PERCENT < ${{ vars.MEU_VALOR }}" | bc -l) )); then
             echo "A cobertura está abaixo da meta! Para mais informações, baixe o report." >> $GITHUB_STEP_SUMMARY
             exit 1
           fi
