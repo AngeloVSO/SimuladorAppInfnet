@@ -89,4 +89,4 @@ jobs:
         run: sudo docker pull ${{ secrets.DOCKER_USERNAME }}/simuladorapp:latest
 
       - name: Run docker container
-        run: sudo docker run -it ${{ secrets.DOCKER_USERNAME }}/simuladorapp:latest
+        run: sudo docker run ${{ secrets.DOCKER_USERNAME }}/simuladorapp:latest
