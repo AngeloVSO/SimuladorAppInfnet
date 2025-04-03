@@ -93,15 +93,6 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-1
 
-      - name: Start EC2 if stopped
-        run: |
-          INSTANCE_STATE=$(aws ec2 describe-instances --instance-ids ${{ secrets.EC2_HOST }} --query 'Reservations[*].Instances[*].State.Name' --output text)
-          if [ "$INSTANCE_STATE" != "running" ]; then
-            echo "EC2 instance is not running."
-          else
-            echo "EC2 instance is already running."
-          fi
-
       - name: Deploy to server
         uses: appleboy/ssh-action@master
         with:
