@@ -102,6 +102,4 @@ jobs:
             sudo docker pull ${{ secrets.DOCKER_USERNAME }}/simuladorapp:latest
             sudo docker stop simuladorapp || true
             sudo docker rm simuladorapp || true
-
-      - name: Run docker container with input
-        run: echo -e "Angelo ODwyer" | sudo docker run -i ${{ secrets.DOCKER_USERNAME }}/simuladorapp:latest
+            echo -e "Angelo ODwyer" | sudo docker run -i ${{ secrets.DOCKER_USERNAME }}/simuladorapp:latest
