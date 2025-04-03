@@ -81,12 +81,25 @@ jobs:
       - name: Push docker image to hub
         run: docker push ${{ secrets.DOCKER_USERNAME }}/simuladorapp:latest
 
-  deploy:
-    needs: docker
-    runs-on: self-hosted
-    steps:
-      - name: Pull image from docker hub
-        run: sudo docker pull ${{ secrets.DOCKER_USERNAME }}/simuladorapp:latest
+      # deploy:
+      #   needs: docker
+      #   runs-on: self-hosted
+      #   steps:
+      #     - name: Pull image from docker hub
+      #       run: sudo docker pull ${{ secrets.DOCKER_USERNAME }}/simuladorapp:latest
 
-      - name: Run docker container
-        run: sudo docker run -d ${{ secrets.DOCKER_USERNAME }}/simuladorapp:latest
+      #     - name: Run docker container
+      #       run: sudo docker run -d ${{ secrets.DOCKER_USERNAME }}/simuladorapp:latest
+
+      - name: Deploy to server
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_PRIVATE_KEY }}
+          script: |
+            #!/bin/bash
+            sudo docker pull ${{ secrets.DOCKER_USERNAME }}/simuladorapp:latest
+            sudo docker stop simuladorapp || true
+            sudo docker rm simuladorapp || true
+            sudo docker run --name simuladorapp -it ${{ secrets.DOCKER_USERNAME }}/simuladorapp:latest
