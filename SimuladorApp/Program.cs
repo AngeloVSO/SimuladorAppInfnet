@@ -34,7 +34,6 @@ class Program
             Console.WriteLine($"Erro: {ex.Message}");
         }
 
-        Console.WriteLine("\nPressione qualquer tecla para sair...");
-        Console.ReadKey();
+        Console.WriteLine("\nSimulação finalizada.");
     }
 }
