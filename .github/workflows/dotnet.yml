@@ -86,7 +86,7 @@ jobs:
     runs-on: self-hosted
     steps:
       - name: Pull image from docker hub
-        run: docker pull ${{ secrets.DOCKER_USERNAME }}/simuladorapp:latest
+        run: sudo docker pull ${{ secrets.DOCKER_USERNAME }}/simuladorapp:latest
 
       - name: Run docker container
-        run: docker run -it ${{ secrets.DOCKER_USERNAME }}/simuladorapp:latest
+        run: sudo docker run -it ${{ secrets.DOCKER_USERNAME }}/simuladorapp:latest
