@@ -87,17 +87,37 @@ jobs:
     needs: docker
     runs-on: ubuntu-latest
     steps:
-      - name: Check and Start EC2 Instance
+      - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v2
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-1
+      #
+      - name: Check and Start EC2 Instance
+        id: start-ec2
+        run: |
+          INSTANCE_ID=${{ secrets.EC2_INSTANCE_ID }}
+          INSTANCE_STATE=$(aws ec2 describe-instances --instance-ids $INSTANCE_ID --query 'Reservations[*].Instances[*].State.Name' --output text)
+
+          if [ "$INSTANCE_STATE" != "running" ]; then
+            echo "Starting EC2 instance..."
+            aws ec2 start-instances --instance-ids $INSTANCE_ID
+            echo "Waiting for instance to be in running state..."
+            aws ec2 wait instance-running --instance-ids $INSTANCE_ID
+          else
+            echo "EC2 instance already running."
+          fi
+
+          PUBLIC_DNS=$(aws ec2 describe-instances --instance-ids $INSTANCE_ID --query 'Reservations[0].Instances[0].PublicDnsName' --output text)
+          echo "Public DNS: $PUBLIC_DNS"
+
+          echo "public_dns=$PUBLIC_DNS" >> $GITHUB_OUTPUT
 
       - name: Deploy to server
         uses: appleboy/ssh-action@master
         with:
-          host: ${{ secrets.EC2_HOST }}
+          host: ${{ steps.start-ec2.outputs.public_dns }}
           username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.EC2_PRIVATE_KEY }}
           script: |
@@ -106,3 +126,16 @@ jobs:
             sudo docker stop simuladorteste || true
             sudo docker rm simuladorteste || true
             sudo docker run -d -p 80:8080 ${{ secrets.DOCKER_USERNAME }}/simuladorteste:1.0
+
+    #   - name: Deploy to server
+    #     uses: appleboy/ssh-action@master
+    #     with:
+    #       host: ${{ secrets.EC2_HOST }}
+    #       username: ${{ secrets.EC2_USERNAME }}
+    #       key: ${{ secrets.EC2_PRIVATE_KEY }}
+    #       script: |
+    #         #!/bin/bash
+    #         sudo docker pull ${{ secrets.DOCKER_USERNAME }}/simuladorteste:1.0
+    #         sudo docker stop simuladorteste || true
+    #         sudo docker rm simuladorteste || true
+    #         sudo docker run -d -p 80:8080 ${{ secrets.DOCKER_USERNAME }}/simuladorteste:1.0
