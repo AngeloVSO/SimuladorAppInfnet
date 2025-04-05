@@ -1,0 +1,9 @@
+name: CI-CD
+
+on:
+  push:
+    branches: ["master"]
+
+jobs:
+  start-build:
+    uses: ./.github/workflows/1-build-and-test.yml
