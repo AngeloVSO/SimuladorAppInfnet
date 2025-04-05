@@ -5,5 +5,17 @@ on:
     branches: ["master"]
 
 jobs:
-  start-build:
+  build:
     uses: ./.github/workflows/build-and-test.yml
+
+  coverage:
+    needs: build
+    uses: ./.github/workflows/coverage-report.yml
+
+  docker:
+    needs: coverage
+    uses: ./.github/workflows/docker-publish.yml
+
+  deploy:
+    needs: docker
+    uses: ./.github/workflows/deploy-aws.yml
