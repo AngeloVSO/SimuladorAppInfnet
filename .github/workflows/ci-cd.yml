@@ -1,4 +1,4 @@
-name: CI-CD
+name: CI/CD Pipeline
 
 on:
   push:
@@ -6,24 +6,102 @@ on:
 
 jobs:
   build:
-    uses: ./.github/workflows/build-and-test.yml
-    with:
-      coverage_meta: ${{ vars.COVERAGE_META }}
+    environment: production
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Restore dependencies
+        run: dotnet restore
+
+      - name: Build
+        run: dotnet build --no-restore
+
+      - name: Test
+        run: dotnet test --no-build --collect:"XPlat Code Coverage"
+        working-directory: SimuladorAppTests
+
+      - name: Install ReportGenerator
+        run: dotnet tool install --global dotnet-reportgenerator-globaltool
+
+      - name: Generate HTML report
+        run: |
+          reportgenerator -reports:**/TestResults/*/coverage.cobertura.xml -targetdir:coveragereport -reporttypes:Html
+
+      - name: Upload report
+        uses: actions/upload-artifact@v4
+        with:
+          name: CodeCoverageReport
+          path: coveragereport
+
+      - name: Coverage and publish on summary
+        run: |
+          COVERAGE_FILE=$(find SimuladorAppTests/TestResults -name "coverage.cobertura.xml" | head -n 1)
+          if [[ -z "$COVERAGE_FILE" ]]; then
+            echo "Arquivo de cobertura não encontrado!" >> $GITHUB_STEP_SUMMARY
+            exit 1
+          fi
+
+          TOTAL_COVERAGE=$(grep -oP '(?<=line-rate=")[0-9.]+' "$COVERAGE_FILE" | head -n 1)
+          TOTAL_COVERAGE_PERCENT=$(echo "$TOTAL_COVERAGE * 100" | bc)
+
+          echo '### 📊 Relatório de Cobertura de Código' >> $GITHUB_STEP_SUMMARY
+          echo "**Cobertura Total:** $TOTAL_COVERAGE_PERCENT% - Meta: ${{ vars.COVERAGE_META }}%" >> $GITHUB_STEP_SUMMARY
+
+          if (( $(echo "$TOTAL_COVERAGE_PERCENT < ${{ vars.COVERAGE_META }}" | bc -l) )); then
+            echo "A cobertura está abaixo da meta! Para mais informações, baixe o report." >> $GITHUB_STEP_SUMMARY
+            exit 1
+          fi
 
   docker:
+    name: Publish docker and deploy
     needs: build
-    uses: ./.github/workflows/docker-publish.yml
-    secrets:
-      DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
-      DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Login Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Build docker image
+        run: docker build -t ${{ secrets.DOCKER_USERNAME }}/simuladorapp:latest .
+
+      - name: Push docker image to hub
+        run: docker push ${{ secrets.DOCKER_USERNAME }}/simuladorapp:latest
 
   deploy:
+    name: Deploy to EC2
     needs: docker
-    uses: ./.github/workflows/deploy-aws.yml
-    secrets:
-      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-      EC2_HOST: ${{ secrets.EC2_HOST }}
-      EC2_USERNAME: ${{ secrets.EC2_USERNAME }}
-      EC2_PRIVATE_KEY: ${{ secrets.EC2_PRIVATE_KEY }}
-      DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check and Start EC2 Instance
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: Deploy to server
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_PRIVATE_KEY }}
+          script: |
+            #!/bin/bash
+            sudo docker pull ${{ secrets.DOCKER_USERNAME }}/simuladorapp:latest
+            sudo docker stop simuladorapp || true
+            sudo docker rm simuladorapp || true
+            echo -e "Angelo ODwyer" | sudo docker run -i ${{ secrets.DOCKER_USERNAME }}/simuladorapp:latest
