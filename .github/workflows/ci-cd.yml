@@ -6,4 +6,4 @@ on:
 
 jobs:
   start-build:
-    uses: ./.github/workflows/1-build-and-test.yml
+    uses: ./.github/workflows/build-and-test.yml
