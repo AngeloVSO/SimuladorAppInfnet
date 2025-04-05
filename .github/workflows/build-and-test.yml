@@ -2,11 +2,18 @@ name: Build and Test .NET
 
 on:
   workflow_call:
+    inputs:
+      coverage_meta:
+        required: true
+        type: string
 
 jobs:
   build:
     name: Build, Test .NET and Report Coverage
     runs-on: ubuntu-latest
+    env:
+      COVERAGE_META: ${{ inputs.coverage_meta }}
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
