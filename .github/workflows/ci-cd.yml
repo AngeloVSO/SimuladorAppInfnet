@@ -8,12 +8,8 @@ jobs:
   build:
     uses: ./.github/workflows/build-and-test.yml
 
-  coverage:
-    needs: build
-    uses: ./.github/workflows/coverage-report.yml
-
   docker:
-    needs: coverage
+    needs: build
     uses: ./.github/workflows/docker-publish.yml
 
   deploy:
