@@ -6,6 +6,7 @@ on:
 
 jobs:
   build:
+    name: Build, test and coverage report
     environment: production
     runs-on: ubuntu-latest
 
@@ -61,7 +62,7 @@ jobs:
           fi
 
   docker:
-    name: Publish docker and deploy
+    name: Build and publish docker image
     needs: build
     runs-on: ubuntu-latest
 
@@ -101,7 +102,7 @@ jobs:
           key: ${{ secrets.EC2_PRIVATE_KEY }}
           script: |
             #!/bin/bash
-            sudo docker pull ${{ secrets.DOCKER_USERNAME }}/simuladorapp:latest
-            sudo docker stop simuladorapp || true
-            sudo docker rm simuladorapp || true
-            echo -e "Angelo ODwyer" | sudo docker run -i ${{ secrets.DOCKER_USERNAME }}/simuladorapp:latest
+            sudo docker pull ${{ secrets.DOCKER_USERNAME }}/simuladorteste:1.0
+            sudo docker stop simuladorteste || true
+            sudo docker rm simuladorteste || true
+            sudo docker run -d -p 80:8080 ${{ secrets.DOCKER_USERNAME }}/simuladorteste:1.0
