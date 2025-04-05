@@ -1,10 +1,7 @@
 name: Generate Coverage Report
 
 on:
-  workflow_run:
-    workflows: ["Build and Test .NET"]
-    types:
-      - completed
+  workflow_call:
 
 jobs:
   coverage:
