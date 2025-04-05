@@ -114,7 +114,7 @@ jobs:
 
       #     echo "public_dns=$PUBLIC_DNS" >> $GITHUB_OUTPUT
       - name: Get or Start EC2 Instance by Name
-        id: ec2
+        id: start-ec2
         run: |
           NAME_TAG="Infra-EC2-PosInfnet"
 
